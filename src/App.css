@@ -1,38 +1,53 @@
 .App {
-  text-align: center;
+    text-align: center;
+    padding: 20px;
+    font-family: sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.dropzone {
+    border: 2px dashed #cccccc;
+    border-radius: 4px;
+    padding: 40px 20px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: border 0.24s ease-in-out;
+    background-color: #f8f8f8;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.dropzone:hover,
+.dropzone-active {
+    border-color: #007bff;
+    background-color: #e9f5ff;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.dropzone p {
+    margin: 0;
+    color: #666666;
 }
 
-.App-link {
-  color: #61dafb;
+.error-message {
+    color: red;
+    margin-top: 15px;
+    font-weight: bold;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.loading-message {
+    margin-top: 15px;
+    color: #007bff;
+}
+
+.chart-container {
+    margin-top: 30px;
+    /* Ensure chart displays correctly */
+    width: 100%;
+    max-width: 900px;
+    /* Adjust as needed */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Responsive Recharts */
+.recharts-responsive-container {
+    min-width: 0;
+    /* Override default min-width if necessary */
 }
