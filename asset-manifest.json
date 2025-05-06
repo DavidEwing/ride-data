@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/ride-data/static/css/main.5c16bc90.css",
+    "main.js": "/ride-data/static/js/main.65d29c60.js",
+    "static/js/453.2237a462.chunk.js": "/ride-data/static/js/453.2237a462.chunk.js",
+    "index.html": "/ride-data/index.html",
+    "main.5c16bc90.css.map": "/ride-data/static/css/main.5c16bc90.css.map",
+    "main.65d29c60.js.map": "/ride-data/static/js/main.65d29c60.js.map",
+    "453.2237a462.chunk.js.map": "/ride-data/static/js/453.2237a462.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5c16bc90.css",
+    "static/js/main.65d29c60.js"
+  ]
+}
