@@ -2,7 +2,7 @@
   "name": "ride-data",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://<your-github-username>.github.io/ride-data",
+  "homepage": "https://davidewing.github.io/ride-data",
   "dependencies": {
     "@garmin/fitsdk": "^21.170.0",
     "@testing-library/dom": "^10.4.0",
