@@ -1,10 +1,84 @@
-// src/App.js
+/* Main RideData application component
+
+Plans:
+1. Fix metric/imperial toggle control to be radio buttons instead of a checkbox
+2. Default to imperial units
+3. Add "Reported Session Data" below the chart (sessionMesgs[0])
+4. Add "Chart Data" selector to left of chart (e.g. Altitude, Speed, Heart Rate, etc.) allowing
+   multiple selections of fields from recordMesgs. This should be a checkbox list of fields
+   available in the FIT file recordMesgs (see below) or fetched external DEM sources (see below).
+   The chart should update to show only the selected fields. Default to only showing altitude.
+5. Add external DEM data sources for elevation data, controlled by a UI below the chart, allowing
+   the user to trigger fetching elevation data corresponding to lat/lon from FIT file from the selected DEM source:
+   a) EPQS - USGS 3DEP 1 m (USA) [https://nationalmap.gov/epqs/?x=<lon>&y=<lat>&units=Meters&output=json]
+   b) OpenTopography (global LiDAR collections + 3DEP) [https://portal.opentopography.org/API/otElevation?locations=<lat>,<lon>&demtype=DEM]
+   When the user clicks the button, the app should fetch the elevation data from the selected DEM source, and show progress. 
+   The app should then make the elevation data available to the chart, allowing the user to select it as a chart data source.
+6. Add a "Calculated Climb Data" section below the chart, showing the total ascent and descent. This should be a table with rows for each 
+   altitude data set (FIT file, DEM sources) and columns for total ascent and descent. 
+   The app should calculate the total ascent and descent from the altitude data assuming linear interpolation of altitude between data points.
+7. Add a radio button to select between Linear and Spline interpolation for the ascent/descent data table.
+   For spline interpolation, the app should recalculate the altitude data using a spline interpolation algorithm (e.g. cubic spline) for
+   each row of the table, using the spline minima/maxima to calculate the total ascent and descent.
+
+Example FIT file objects:
+  recordMesgs[n]
+  {
+      "timestamp": "2025-05-04T14:09:45.000Z",
+      "positionLat": 401449142,
+      "positionLong": -1021630874,
+      "gpsAccuracy": 13,
+      "altitude": 296.4,
+      "grade": 1.68,
+      "distance": 0,
+      "heartRate": 70,
+      "calories": 0,
+      "cadence": 54,
+      "speed": 5.686,
+      "power": 207,
+      "batterySoc": 94,
+
+  }
+
+  sessionMesgs[0]
+  {
+      "timestamp": "2025-05-04T19:09:01.000Z",
+      "startTime": "2025-05-04T14:09:44.000Z",
+      "totalElapsedTime": 17957,
+      "totalTimerTime": 15548,
+      "avgSpeed": 4.993,
+      "maxSpeed": 13.917,
+      "totalDistance": 77623.97,
+      "avgCadence": 70,
+      "maxCadence": 117,
+      "minHeartRate": 70,
+      "avgHeartRate": 131,
+      "maxHeartRate": 154,
+      "avgPower": 224,
+      "maxPower": 758,
+      "totalWork": 2636877,
+      "minAltitude": 267.20000000000005,
+      "avgAltitude": 378,
+      "maxAltitude": 477.4,
+      "maxNegGrade": -9.68,
+      "avgGrade": 1.06,
+      "maxPosGrade": 10.84,
+      "totalCalories": 2779,
+      "normalizedPower": 232,
+      "avgTemperature": 14,
+      "maxTemperature": 23,
+      "totalAscent": 1840,
+      "totalDescent": 1852,
+  }
+
+*/
+
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-// Correct import: Use Decoder and Stream
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './App.css';
+import SessionDataDisplay from './SessionDataDisplay'; // Import the new component
 
 // Helper function for formatting timestamp in tooltip
 function formatTimestampForTooltip(timestamp) {
@@ -22,15 +96,17 @@ function formatTimestampForTooltip(timestamp) {
 
 function App() {
   const [altitudeData, setAltitudeData] = useState([]);
+  const [sessionData, setSessionData] = useState(null); // Add state for session data
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fileName, setFileName] = useState('');
-  const [isMetric, setIsMetric] = useState(true);
+  const [isMetric, setIsMetric] = useState(false);
 
   const onDrop = useCallback((acceptedFiles) => {
     setError(null);
     setAltitudeData([]);
     setFileName('');
+    setSessionData(null); // Reset session data on new file drop
     setIsLoading(true);
 
     if (acceptedFiles.length === 0) {
@@ -55,7 +131,7 @@ function App() {
 
       try {
         const stream = Stream.fromArrayBuffer(arrayBuffer);
-        console.log("Stream created successfully."); // Log success
+        console.log("Stream created successfully.");
 
         const decoder = new Decoder(stream);
         console.log("Decoder created.");
@@ -123,7 +199,26 @@ function App() {
         const messages = result.messages;
         console.log("Parsed FIT Messages object:", messages);
 
-        // --- Resume processing the 'messages' object as before ---
+        // --- Session Data ---
+        const sessions = messages?.sessionMesgs || [];
+        if (sessions.length > 0) {
+          // Convert relevant date strings to Date objects if not already done by the SDK
+          const currentSession = { ...sessions[0] };
+          if (currentSession.timestamp && typeof currentSession.timestamp === 'string') {
+            currentSession.timestamp = new Date(currentSession.timestamp);
+          }
+          if (currentSession.startTime && typeof currentSession.startTime === 'string') {
+            currentSession.startTime = new Date(currentSession.startTime);
+          }
+          setSessionData(currentSession);
+          console.log("Session data set:", currentSession);
+        } else {
+          console.log("No session messages found in the FIT file.");
+          setSessionData(null); // Ensure it's null if no session data
+        }
+        // --- End Session Data ---
+
+        // --- Record Data (for chart) ---
         const records = messages?.recordMesgs || [];
         console.log(`Found ${records.length} record messages in final object.`);
 
@@ -238,13 +333,25 @@ return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Altitude Profile</h2>
           <div className="unit-toggle">
+            <label style={{ marginRight: '10px' }}>
+              <input
+                type="radio"
+                name="unit"
+                value="metric"
+                checked={isMetric}
+                onChange={() => setIsMetric(true)}
+              />
+              <span style={{ marginLeft: '5px' }}>Metric</span>
+            </label>
             <label>
               <input
-                type="checkbox"
-                checked={isMetric}
-                onChange={() => setIsMetric(!isMetric)}
+                type="radio"
+                name="unit"
+                value="imperial"
+                checked={!isMetric}
+                onChange={() => setIsMetric(false)}
               />
-              <span style={{ marginLeft: '5px' }}>{isMetric ? 'Metric' : 'Imperial'}</span>
+              <span style={{ marginLeft: '5px' }}>Imperial</span>
             </label>
           </div>
         </div>
@@ -299,6 +406,9 @@ return (
       </div>
     )}
     {altitudeData.length === 0 && !isLoading && !error && <p>Upload a FIT file to view the altitude profile.</p>}
+
+    {/* Display Session Data */}
+    {sessionData && <SessionDataDisplay sessionData={sessionData} isMetric={isMetric} />}
 
   </div>
 );

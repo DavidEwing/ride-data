@@ -1,0 +1,35 @@
+.session-data-container {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.session-data-container h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.session-data-table {
+  width: fit-content; /* Adjust width to content */
+  border-collapse: collapse;
+  margin-left: auto; /* Center the table if desired */
+  margin-right: auto; /* Center the table if desired */
+}
+
+.session-data-table td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.session-data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.session-data-table td:first-child {
+  font-weight: bold;
+  color: #555;
+  width: 40%; /* Adjust as needed */
+}
